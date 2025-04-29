@@ -55,11 +55,11 @@ OUTPUT FILES:
 
 EXAMPLES:
   # Basic usage with default parameters
-  python string_ppi.py --input_list genes.txt
+  python string_ppi.py --input_list example_genes.csv
 
   # Custom configuration with higher confidence and spacing
-  python string_ppi.py --input_list genes.txt --score_threshold 0.9 --node_spacing 3.0
+  python string_ppi.py --input_list example_genes.csv--score_threshold 0.9 --node_spacing 3.0
 
   # Running with more second shell proteins and lower evidence threshold
-  python string_ppi.py --input_list genes.txt --additional_nodes 2000 --evidence_contribution_threshold 0.1
+  python string_ppi.py --input_list example_genes.csv --additional_nodes 2000 --evidence_contribution_threshold 0.1
 ```
