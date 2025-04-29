@@ -9,8 +9,8 @@ including detailed interaction data, a network visualization, and a list of uniq
 
 # INSTALLATION:
 ```
-#Clone the repository
-git clone
+#Clone this repository
+git clone https://github.com/feltus/stringdb_api.git
 
 #Install dependencies (Note: You may want to create conda or virtual environment for this code , but the libraries are fairly standard.)
 pip install requests pandas matplotlib networkx numpy
