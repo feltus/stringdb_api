@@ -94,38 +94,44 @@ class STRINGPhysicalInteractionFetcher:
             filtered_df = network_df[network_df['score'] >= int(score_threshold * 1000)]
             print(f"\nAfter overall score filtering: {len(filtered_df)} interactions")
             
-            # Calculate the contribution of experimental and database evidence to total score
+            # Calculate the contribution of experimental OR database evidence to total score
             if 'experimental_score' in filtered_df.columns and 'database_score' in filtered_df.columns:
                 # Show distribution of evidence types
                 print("\nEvidence score distribution (mean values):")
                 for col in [c for c in filtered_df.columns if c.endswith('_score')]:
                     print(f"{col}: {filtered_df[col].mean():.2f}")
                 
-                filtered_df['evidence_contribution'] = 0
-                
-                # Sum up the evidence from required types
+                # Calculate normalized scores (0-1 scale) for each evidence type
                 for evidence_type in required_evidence_types:
                     score_col = f"{evidence_type}_score"
                     if score_col in filtered_df.columns:
-                        filtered_df['evidence_contribution'] += filtered_df[score_col]
+                        filtered_df[f"{score_col}_normalized"] = filtered_df[score_col] / filtered_df['score']
                 
-                # Calculate as a proportion of total score
-                filtered_df['evidence_contribution'] = filtered_df['evidence_contribution'] / filtered_df['score']
+                # CHANGED: Instead of summing contributions, check if ANY required evidence type meets threshold
+                evidence_mask = False  # Start with False
+                for evidence_type in required_evidence_types:
+                    norm_score_col = f"{evidence_type}_score_normalized"
+                    if norm_score_col in filtered_df.columns:
+                        # Use logical OR to combine masks
+                        evidence_mask = evidence_mask | (filtered_df[norm_score_col] >= evidence_contribution_threshold)
                 
                 # Show the evidence contribution distribution
                 if len(filtered_df) > 0:
                     print(f"\nEvidence contribution stats:")
-                    print(f"Min: {filtered_df['evidence_contribution'].min():.2f}")
-                    print(f"Max: {filtered_df['evidence_contribution'].max():.2f}")
-                    print(f"Mean: {filtered_df['evidence_contribution'].mean():.2f}")
-                    print(f"Median: {filtered_df['evidence_contribution'].median():.2f}")
+                    for evidence_type in required_evidence_types:
+                        norm_score_col = f"{evidence_type}_score_normalized"
+                        if norm_score_col in filtered_df.columns:
+                            print(f"{evidence_type} min: {filtered_df[norm_score_col].min():.2f}")
+                            print(f"{evidence_type} max: {filtered_df[norm_score_col].max():.2f}")
+                            print(f"{evidence_type} mean: {filtered_df[norm_score_col].mean():.2f}")
                 
-                # Keep interactions where experimental+database contributes at least the threshold to the total score
-                evidence_mask = filtered_df['evidence_contribution'] >= evidence_contribution_threshold
+                # Keep interactions where experimental OR database contribution meets the threshold
                 before_filtering = len(filtered_df)
                 filtered_df = filtered_df[evidence_mask]
                 print(f"\nAfter evidence contribution filtering: {len(filtered_df)} interactions " +
                       f"(removed {before_filtering - len(filtered_df)})")
+                print(f"Filter logic: Kept interactions with EITHER {' OR '.join(required_evidence_types)} " +
+                      f"evidence contribution ≥ {evidence_contribution_threshold}")
             
             # Identify which proteins are from the original set vs second shell
             if 'preferredName_A' in filtered_df.columns and 'preferredName_B' in filtered_df.columns:
